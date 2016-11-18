@@ -1,0 +1,44 @@
+import System
+import System.Collections.Generic
+import System.Linq
+import System.Text
+import System.Windows
+import System.Windows.Controls
+import System.Windows.Data
+import System.Windows.Documents
+import System.Windows.Input
+import System.Windows.Media
+import System.Windows.Media.Imaging
+import System.Windows.Navigation
+import System.Windows.Shapes
+
+namespace Symphony.Ensemble.Controls
+
+	;;; <summary>
+	;;; Interaction logic for Calendar.xaml
+	;;; </summary>
+	public partial class Calendar extends UserControl
+		
+		public method Calendar
+			endparams
+		proc
+			this.InitializeComponent()
+		endmethod
+
+		;;let's ensure that the button clicks actually give the control mouse focus so the user does
+		;;not need to click twice!!
+		protected override method OnPreviewMouseUp	,void
+			eArgs									,@MouseButtonEventArgs
+			endparams
+		proc
+			parent.OnPreviewMouseUp(eArgs)
+			if (Mouse.Captured .is. System.Windows.Controls.Primitives.CalendarItem)
+			begin
+				Mouse.Capture(^null)
+			end
+			
+		endmethod
+		
+	endclass
+endnamespace
+

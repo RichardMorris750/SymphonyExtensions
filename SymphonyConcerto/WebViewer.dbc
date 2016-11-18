@@ -1,0 +1,146 @@
+;;**********************************************************************
+;;
+;; Title:       WebViewer.dbc
+;;
+;; Type:        Class
+;;
+;; Description: WPF Web page viewer control for UI toolkit programs
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+Namespace Symphony.Concerto
+
+    ;;; <summary>
+    ;;; Static class to allow te display of a Progress Bar within a Synergy UI
+    ;;; Toolkit program.
+    ;;; </summary>
+    ;;; <returns></returns>
+    public class WebViewer
+
+		;;define a static window event handler set to apply to all windows created
+		private static mEventHdl	,i4	,0
+
+        ;;define the minimum assembly version that this control will work with
+        private const cMinVersion   ,i1     ,1
+
+        ;;private variables
+        private mInitialised        ,boolean        ,false
+
+        private mWebViewer         	,@DotNetObject
+		private mViewModel			,@DotNetObject
+        private mDelegate           ,@DotNetDelegate
+		private mBrowserData     	,@DotNetObject
+
+        private mMaximumValue       ,i4
+
+        private mWindowID           ,i4
+
+        ;;; <summary>
+        ;;; Create a Synergy UI Toolkit window and host a form
+        ;;; that display a web browser
+        ;;; </summary>
+        ;;; <param name="posX">pass the row value</param>
+        ;;; <param name="posY">pass the column value</param>
+        ;;; <param name="width">define the width of the window</param>
+        ;;; <param name="description">text to display in the label</param>
+        ;;; <param name="maxValue">maximum value the progress bar will display</param>
+        ;;; <returns></returns>
+        public method Create     ,void
+            in req posX             ,n
+            in req posY             ,n
+            in req height           ,n
+            in req width            ,n
+            in req uri              ,string
+            endparams
+
+        .include 'DBLDIR:windows.def'
+        .include 'WND:tools.def'
+
+        record
+            showProgressBar ,a1
+            logLength       ,d2
+        endrecord
+        proc
+			;;create the view model object
+			mViewModel = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.ViewModel.WebViewerViewModel')
+
+			;;load the control
+			mWebViewer = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Controls.WebViewer')
+
+			;;let's bind the view model to the data context of the view
+			mWebViewer.SetProperty('DataContext', mViewModel)
+
+            ;; Let's know when they cancel the window
+			mDelegate = new DotNetDelegate(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Delegates.MenuSignalEventHandler', ^null, 'Symphony.Concerto.WebViewer.CloseWindow')
+
+            mViewModel.AddDelegateToEvent('MenuSignal', mDelegate)
+
+            ;;create a toolkit window and host the control
+            mWindowID = %dotnet_tkwin('', height, width, mWebViewer, DN_WPF)
+			Symphony.Concerto.SetEventDispatcher.SetWindow(mWindowID, mWebViewer)
+
+            ;;display the window
+            w_proc(WP_PLACE, mWindowID, posX, posY)
+
+            ;;set values
+            mBrowserData = (DotNetObject)mViewModel.GetProperty("WebBrowserData")
+
+            mBrowserData.Call("SetURIString", uri)
+
+            w_updt()
+
+            mInitialised = true
+
+            ;;process the calendar
+            dotnet_tkinput(mWindowID)
+
+            u_window(D_REMOVE, mWindowID)
+            w_updt()
+            u_window(D_DELETE, mWindowID)
+            mWebViewer = ^null
+			mBrowserData = ^null
+			mViewModel = ^null
+
+            ;;ensure we don't bubble up the menu option!
+            clear g_entnam
+
+            mreturn
+
+        endmethod
+
+        ;;private event handler to signal menu choice
+        public static method CloseWindow  ,void
+            sender      ,@DotNetObject
+            e           ,@DotNetObject
+            endparams
+        proc
+            m_signal((string)e.GetProperty('MenuName'))
+        endmethod
+
+    endclass
+endnamespace

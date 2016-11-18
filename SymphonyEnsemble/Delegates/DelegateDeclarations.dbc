@@ -1,0 +1,172 @@
+;;**********************************************************************
+;;
+;; Title:       DelegateDeclarations.dbc
+;;
+;; Type:        Class
+;;
+;; Description: class that contains delegate declarations to allow a central point of reference
+;;				for the host UI Toolkit program
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+import System
+import System.Collections.Generic
+import System.Text
+
+
+namespace Symphony.Ensemble.Delegates
+
+.region "Delegates"
+
+	;;; <summary>
+	;;;  Expose a delegate to reference from the UI Toolkit program.  This delegate defines the 
+	;;;  signature of the MenuSignal event defined and raised in the BaseViewModel class
+	;;; </summary>
+	;;; <param name=sender>the sending object reference</param>
+	;;; <param name=eArgs>event arguments defined in the MenuSignalEventArgs class</param>
+	public delegate MenuSignalEventHandler	,void
+		sender								,@Object
+		eArgs								,@MenuSignalEventArgs
+	enddelegate
+
+	;;; <summary>
+	;;;  Expose a delegate to reference from the UI Toolkit program.  This delegate defines the 
+	;;;  signature of the ListLoad event which allows binding of the standard UI Toolkit list load
+	;;;  method to allow the population of data bound controls from UI Toolkit list processing code.
+	;;; </summary>
+	;;; <param name=sender>the sending object reference</param>
+	;;; <param name=eArgs>event arguments defined in the ListLoadEventArgs class</param>
+	public delegate ListLoadEventHandler	,void
+		sender								,@Object
+		eArgs								,@ListLoadEventArgs
+	enddelegate
+	
+.endregion
+
+	;;; <summary>
+	;;;  Simple data class that defines the contract between the hostUI Toolkit program and the UI Control
+	;;; </summary>
+	public class MenuSignalEventArgs
+
+.region "Constructor"
+
+		;;; <summary>
+		;;;  Constructor
+		;;; </summary>
+		;;;<param name=menu>Accepts the menu string to send to the host UI Toolkit program</param>
+		public method MenuSignalEventArgs
+			in req menu						,String
+			endparams
+		proc
+			mMenuName = menu
+		endmethod
+.endregion
+
+
+.region "Properties"
+		private mMenuName	,String
+
+		;;; <summary>
+		;;;  Contains the name of the signalled menu entry
+		;;; </summary>
+		public property MenuName, String
+			method get
+			proc
+				mreturn mMenuName
+			endmethod
+			method set
+			proc
+				mMenuName = value
+			endmethod
+		endproperty
+.endregion
+
+	endclass
+
+	;;; <summary>
+	;;;  Data class that defines the contract between the View Model and the host UI Toolkit program when the View Model
+	;;;  is requesting data from a UI Toolkit list load method.
+	;;; </summary>
+	public class ListLoadEventArgs
+		
+.region "Constructor"
+
+		;;; <summary>
+		;;;  Default constructor
+		;;; </summary>
+		;;; <param name=listData>Pass the Synergy record area to define the actual data specification which will be passed to the UI Toolkit lit load method</param>
+		public method ListLoadEventArgs
+			listData						,String
+			endparams
+		proc
+			mDataArea = listData
+			mMoreItems = 0
+		endmethod
+
+.endregion
+
+.region "Properties"
+
+		private mDataArea	,String
+
+		;;; <summary>
+		;;;  list load data area
+		;;; </summary>
+		public property DataArea, String
+			method get
+			proc
+				mreturn mDataArea
+			endmethod
+			method set
+			proc
+				mDataArea = value
+			endmethod
+		endproperty
+		
+		private mMoreItems	,int
+
+		;;; <summary>
+		;;;  value indicating current item being loaded.
+		;;; </summary>
+		public property MoreItems, int
+			method get
+			proc
+				mreturn mMoreItems
+			endmethod
+			method set
+			proc
+				mMoreItems = value
+			endmethod
+		endproperty
+		
+.endregion
+
+	endclass
+
+endnamespace
+

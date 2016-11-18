@@ -1,0 +1,99 @@
+;;**********************************************************************
+;;
+;; Title:       Base.dbc
+;;
+;; Type:        Class
+;;
+;; Description: base class for the Symphony .NET / TK utilities.
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+namespace Symphony.Concerto
+
+    public class Base
+
+        private const cAssemblyVersionNumber    ,i  ,1
+
+        private static mStartUpSlow             ,boolean        ,true
+        private static mLoaded                  ,boolean        ,false
+        private static mThis                    ,@DotNetAssembly
+
+        ;;; <summary>
+        ;;; The Load method allows you to pre-load the UI assembly
+        ;;; atprogram startup
+        ;;; </summary>
+        ;;; <returns></returns>
+        public static method Load   ,void
+        proc
+            begin
+                data x  ,@DotNetAssembly
+                x = Symphony.Concerto.Base.UIAssembly(cAssemblyVersionNumber)
+            end
+        endmethod
+
+        public static method UIAssembly   ,@DotNetAssembly
+            in req versionNumber          ,i
+            endparams
+        proc
+            ;;been here, so we must be loaded and ready to use!
+            if mLoaded
+                mreturn mThis
+
+            try
+            begin
+                ;;load the required assemblie
+                mThis = new DotNetAssembly('SYMPHONYBIN:SymphonyEnsemble')
+
+            end
+            catch (e, @Exception)
+				begin
+                ;;just rethrow the error becuase something is not setup right!!
+				u_message(e.Message)
+                throw
+				end
+            endtry
+
+            ;;we have the assembly loaded - check the version number
+            begin
+                data assVer ,i1
+                ((DotNetObject)mThis).GetProperty("Symphony.Ensemble.Base.AssemblyVersion", assVer)
+                if (versionNumber > assVer)
+                begin
+                    data msg,a100
+                    s_bld(msg,, 'Symphony.Ensemble Version Mismatch.  Required : %d, Actual : %d',
+                    &   versionNumber, assVer)
+                    throw new Exception(%atrim(msg))
+                end
+
+			end
+			mLoaded = true
+            mreturn mThis
+        endmethod
+    endclass
+endnamespace
+

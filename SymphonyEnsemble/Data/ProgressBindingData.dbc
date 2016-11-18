@@ -1,0 +1,155 @@
+;;**********************************************************************
+;;
+;; Title:       ProgressBindingData.dbc
+;;
+;; Type:        Class
+;;
+;; Description: Progress control binding data class
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+import System
+import System.Collections.Generic
+import System.Text
+import System.ComponentModel
+
+namespace Symphony.Ensemble.Data
+
+	public class ProgressBindingData implements INotifyPropertyChanged
+		
+.region "Constructor"
+		;;; <summary>
+		;;;  Default constructor
+		;;; </summary>
+		public method ProgressBindingData
+			endparams
+		proc
+			mMinValue = -1
+			mMaxValue = 0
+			mCurrentValue = 0
+			mFontSize = 16
+		endmethod
+
+.endregion
+
+.region "Public properties"
+
+		private mDescription	,String
+
+		public property Description, String
+			method get
+			proc
+				mreturn mDescription
+			endmethod
+			method set
+			proc
+				mDescription = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("Description"))
+			endmethod
+		endproperty
+		
+		private mMinValue	,int
+
+		public property MinValue, int
+			method get
+			proc
+				mreturn mMinValue
+			endmethod
+			method set
+			proc
+				mMinValue = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("MinValue"))
+			endmethod
+		endproperty
+		
+		private mMaxValue	,int
+
+		public property MaxValue, int
+			method get
+			proc
+				mreturn mMaxValue
+			endmethod
+			method set
+			proc
+				mMaxValue = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("MaxValue"))
+			endmethod
+		endproperty
+		
+		private mCurrentValue	,int
+
+		public property CurrentValue, int
+			method get
+			proc
+				mreturn mCurrentValue
+			endmethod
+			method set
+			proc
+				mCurrentValue = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("CurrentValue"))
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("Percentage"))
+			endmethod
+		endproperty
+		
+		private mFontSize	,int
+
+		public property FontSize, int
+			method get
+			proc
+				mreturn mFontSize
+			endmethod
+			method set
+			proc
+				mFontSize = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("FontSize"))
+			endmethod
+		endproperty
+		
+		public property Percentage, String
+			method get
+			proc
+				data c	,decimal	,mCurrentValue
+				data m	,decimal	,mMaxValue
+				data p	,decimal	,(c / m) * 100
+				mreturn string.Concat(p.ToString(), "%");
+			endmethod
+		endproperty
+
+.endregion
+		
+.region "INotifyPropertyChanged Members"
+		
+		public event PropertyChanged	,@PropertyChangedEventHandler
+		
+.endregion
+
+	endclass
+
+endnamespace
+

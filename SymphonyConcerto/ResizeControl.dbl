@@ -1,0 +1,80 @@
+;;**********************************************************************
+;;
+;; Title:       ResizeControl.dbl
+;;
+;; Type:        Subroutine
+;;
+;; Description: Routine to resize a .NET control to a given window size
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+;;;<summary>
+;;; Resize a .NET control within a UI Toolkit window given the window size.
+;;;</summary>
+;;;<param name=sender>Object handle for the DotNetOject which is being resized</param>
+;;;<param name=windowID>window id of the parent UI Tollkit window</param>
+;;;<param name=width>required wistch in pixels of the control</param>
+;;;<param name=height>required height in pixels of the control</param>
+subroutine ResizeControl
+	in req sender		,@DotNetObject
+	in req windowID		,i4
+	in req width		,i4
+	in req height		,i4
+	endparams
+
+	.include 'DBLDIR:windows.def'
+	.define D_DEFINES_ONLY
+	.include 'WND:tools.def'
+
+	record
+		hwnd		,D_ADDR
+		user32		,D_ADDR
+	endrecord
+
+	literal
+		i0			,int, 0
+		GWL_CHILD	,int, 5
+
+proc
+	sender.SetProperty('Width', width)
+    sender.SetProperty('Height', height)
+
+	user32 = dll_open("user32")
+	hwnd = %w_info(WIF_HWND, windowID)
+	while (hwnd = dll_call(user32, DLL_TYPE_WINAPI, "GetWindow", hwnd, GWL_CHILD))
+	begin
+		dll_call(user32, DLL_TYPE_WINAPI, "SetWindowPos", hwnd,
+	&				i0, i0, i0, width, height, i0)
+	end
+	dll_close(user32)
+
+	xreturn
+
+endsubroutine
+

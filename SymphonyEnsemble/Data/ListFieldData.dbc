@@ -1,0 +1,205 @@
+;; **********************************************************************
+;; 
+;;  Title:       ListColumnData.dbc
+;; 
+;;  Type:        Class
+;; 
+;;  Description: List column data definition use by the ListControl
+;; 
+;;  Author:      Richard C. Morris, Synergex Professional Services Group
+;; 
+;;  Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;; 
+;;  Redistribution and use in source and binary forms, with or without
+;;  modification, are permitted provided that the following conditions are met:
+;; 
+;;  * Redistributions of source code must retain the above copyright notice,
+;;    this list of conditions and the following disclaimer.
+;; 
+;;  * Redistributions in binary form must reproduce the above copyright notice,
+;;    this list of conditions and the following disclaimer in the documentation
+;;    and/or other materials provided with the distribution.
+;; 
+;;  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;;  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;;  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;;  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;;  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;;  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;;  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;;  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;;  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;;  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;;  POSSIBILITY OF SUCH DAMAGE.
+;; 
+;; **********************************************************************
+import System
+import System.Collections.Generic
+import System.Linq
+import System.Text
+namespace Symphony.Ensemble.Data
+	
+	public class ListFieldData
+		
+.region "Contructor"
+
+		;;; <summary>
+		;;;  Default constructor
+		;;; </summary>
+		public method ListFieldData
+			endparams
+		proc
+			
+		endmethod
+		
+.endregion
+
+.region "Properties"
+
+		private mFieldName, string
+		
+		;;; <summary>
+		;;;  The name of the field
+		;;; </summary>
+		public property FieldName, string
+			method get
+			proc
+				mreturn mFieldName
+			endmethod
+			method set
+			proc
+				mFieldName = value
+			endmethod
+		endproperty
+		
+		private mColumnHeading, String
+		
+		;;; <summary>
+		;;;  Specified column heading value
+		;;; </summary>
+		public property ColumnHeading, String
+			method get
+			proc
+				mreturn mColumnHeading
+			endmethod
+			method set
+			proc
+				mColumnHeading = value
+			endmethod
+		endproperty
+		
+		private mColumnType, @ListColumnDataType
+
+		;;; <summary>
+		;;;  The Synergy type of the column
+		;;; </summary>		
+		public property ColumnType, @ListColumnDataType
+			method get
+			proc
+				mreturn mColumnType
+			endmethod
+			method set
+			proc
+				mColumnType = value
+			endmethod
+		endproperty
+		
+		private mDataType, string
+		
+		;;; <summary>
+		;;;  Column Synergy data type
+		;;; </summary>
+		public property DataType, string
+			method get
+			proc
+				mreturn mDataType
+			endmethod
+			method set
+			proc
+				mDataType = value
+				using mDataType select
+				("A"),
+				begin
+					mColumnType = ListColumnDataType.Alpha
+					exit
+				end
+				("D"),
+				begin
+					mColumnType = ListColumnDataType.Decimal
+					exit
+				end
+				("ID"),
+				begin
+					mColumnType = ListColumnDataType.ImpliedDecimal
+					exit
+				end
+				("I1"),
+				begin
+					mColumnType = ListColumnDataType.Integer1
+					exit
+				end
+				("I2"),
+				begin
+					mColumnType = ListColumnDataType.Integer2
+					exit
+				end
+				("I4"),
+				begin
+					mColumnType = ListColumnDataType.Integer4
+					exit
+				end
+				("I8"),
+				begin
+					mColumnType = ListColumnDataType.Integer8
+					exit
+				end
+				("DATE8"),
+				begin
+					mColumnType = ListColumnDataType.Date
+					exit
+				end
+				(),
+				begin
+					exit
+				end
+				endusing
+			endmethod
+		endproperty
+		
+		private mDataStart, int
+
+		;;; <summary>
+		;;;  the posistion the data field starts in the Synergy record
+		;;; </summary>		
+		public property DataStart, int
+			method get
+			proc
+				mreturn mDataStart
+			endmethod
+			method set
+			proc
+				mDataStart = value
+			endmethod
+		endproperty
+		
+		private mDataSize, int
+
+		;;; <summary>
+		;;;  The data size of the Synergy field in the record area
+		;;; </summary>		
+		public property DataSize, int
+			method get
+			proc
+				mreturn mDataSize
+			endmethod
+			method set
+			proc
+				mDataSize = value
+			endmethod
+		endproperty
+
+.endregion
+
+	endclass
+endnamespace
+

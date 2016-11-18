@@ -1,0 +1,143 @@
+;;**********************************************************************
+;;
+;; Title:       CalendarBindingData.dbc
+;;
+;; Type:        Class
+;;
+;; Description: calendar contrl binding data class
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+import System
+import System.Collections.Generic
+import System.Text
+
+import System.ComponentModel
+
+namespace Symphony.Ensemble.Data
+
+	public class CalendarBindingData implements INotifyPropertyChanged
+
+.region "Constructor"
+
+		;;; <summary>
+		;;;  Default constuctor
+		;;; </summary>
+		;;; <param name=inDate>Accepts the default date to display in the calendar conrol</param>
+		public method CalendarBindingData
+			in req inDate					,@DateTime
+			endparams
+		proc
+			mActualDate = inDate
+		endmethod
+
+.endregion
+		
+.region "Properties"
+				
+		private mActualDate	,@DateTime
+
+		;;; <summary>
+		;;;  Bindable property exposing the actual date value
+		;;; </summary>
+		public property ActualDate, @DateTime
+			method get
+			proc
+				mreturn mActualDate
+			endmethod
+			method set
+			proc
+				mActualDate = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("ActualDate"))
+			endmethod
+		endproperty
+		
+		;;; <summary>
+		;;; expose the synergy date field as a string so tat we can see it through the .NET API
+		;;; </summary>
+		public property SynergyDate, String
+			method get
+				record fullDate
+					year	,d4
+					mon		,d2
+					day		,d2
+				endrecord
+			proc
+				fullDate.year = mActualDate.Year
+				fullDate.mon = mActualDate.Month
+				fullDate.day = mActualDate.Day
+				mreturn fullDate
+			endmethod
+			method set
+				record SynDate
+					year	,d4
+					mon		,d2
+					day		,d2
+				endrecord
+				record CLRDate
+					year	,int
+					mon		,int
+					day		,int
+				endrecord
+			proc
+				if (value != 0)
+				begin
+					try
+					begin
+						
+					end
+					catch (e, @Exception)
+					begin
+						data tmpDate	,a8
+						tmpDate = value
+						SynDate = tmpDate
+
+						CLRDate.day = SynDate.day
+						CLRDate.mon = SynDate.mon
+						CLRDate.year = SynDate.year
+
+						ActualDate = new DateTime(CLRDate.year, CLRDate.mon, CLRDate.day)						
+					end
+					endtry
+				end
+			endmethod
+		endproperty
+
+.endregion
+				
+.region "INotifyPropertyChanged Members"
+		
+		public event PropertyChanged	,@PropertyChangedEventHandler
+		
+.endregion
+
+	endclass
+
+endnamespace
+

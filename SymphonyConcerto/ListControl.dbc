@@ -1,0 +1,381 @@
+;;**********************************************************************
+;;
+;; Title:       ListControl.dbc
+;;
+;; Type:        Class
+;;
+;; Description: WPF List control for UI toolkit programs
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+Namespace Symphony.Concerto
+
+
+    ;;; <summary>
+    ;;; A class to allow the display and processing of a DataGrid control
+    ;;; within a Synergy UI Toolkit program.
+    ;;; </summary>
+    ;;; <returns></returns>
+    public class ListControl
+
+		;;; <summary>
+		;;; Default constructor
+		;;; </summary>
+		;;; <param name=listType>Pass the type of list to create/process</param>
+		;;; <returns></returns>
+		public method ListControl
+			endparams
+		proc
+			mListType = ListType.Standard
+		endmethod
+
+		;;; <summary>
+		;;; Default constructor
+		;;; </summary>
+		;;; <param name=listType>Pass the type of list to create/process</param>
+		;;; <returns></returns>
+		public method ListControl
+			in req type		,ListType
+			endparams
+		proc
+			mListType = type
+		endmethod
+
+        ;;define the minimum assembly version that this control will work with
+        private const cMinVersion     	,i1     ,2
+
+		;;hold the required list type
+		private mListType				,ListType
+
+		;;create an instance of the list control
+		private mList					,@DotNetObject
+		private mViewModel				,@DotNetObject
+		private mDelegate				,@DotNetDelegate
+
+		private mWindowID        		,i4
+		private mTableMade				,boolean
+		private mTableGotData			,boolean
+
+		;;store method details
+		private mLoadMethod				,a32
+
+		private mRow					,i4
+		private mCol					,i4
+
+		;;list item index number
+		private mIndex					,i4
+
+		;;memory pointer for list load item
+		private mListDataHdl			,i4
+		private mListDataLen			,i4
+
+        ;;; <summary>
+        ;;; Create a Synergy UI Toolkit window and host the
+        ;;; UI List control
+        ;;; </summary>
+        ;;; <returns></returns>
+        public method Create    	,boolean
+			in req winID				,n	;;accept the window id to determine fields in the list
+			in req dataArea				,a	;;list data area
+            in req posX                 ,n	;;location of the list window
+            in req posY                 ,n	;;location of the scren window
+            endparams
+
+			.include 'DBLDIR:windows.def'
+			.define D_DEFINES_ONLY
+			.include 'WND:tools.def'
+			.include 'WND:fldinf.def'
+
+			record
+				methodResult	,boolean
+				fldNum			,i4
+				fldName			,a32
+				columnData		,@DotNetObject
+			endrecord
+        proc
+
+			clear mIndex
+
+			mRow = posX
+			mCol = posY
+
+			mTableMade = false
+			mTableGotData = false
+			methodResult = true
+
+			;;this code allows us t utlsie controls from different vendors t present the list/grid data
+			using mListType select
+			(ListType.Standard),
+			begin
+				;;Load the standard list control
+				mList = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Controls.ListControl')
+
+			end
+			(ListType.DevExpress),
+			begin
+				;;Load the Dev Express list control
+				mList = new DotNetObject(new DotNetAssembly('SymphonyEnsembleDX'), 'Symphony.EnsembleDX.View.ListGrid')
+			end
+			(ListType.Infragistics),
+			begin
+				;;Load the Infragistics list control
+				mList = new DotNetObject(new DotNetAssembly('SymphonyEnsembleIG'), 'Symphony.EnsembleIG.View.ListGrid')
+			end
+			endusing
+
+			;;create an instance of the list view model
+			mViewModel = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.ViewModel.ListViewModel', mList)
+
+			;; Let's know when they want to load list/data items
+			mDelegate = new DotNetDelegate(Symphony.Concerto.Base.UIAssembly(cMinVersion),
+			&	'Symphony.Ensemble.Delegates.ListLoadEventHandler',
+			&	this,
+			&	'ListLoadMethod')
+
+			;;add the event handler
+			mViewModel.AddDelegateToEvent('ListLoad', mDelegate)
+
+			;;let's bind the view model to the data context of the view
+			mList.SetProperty('DataContext', mViewModel)
+
+			;;first allocate an area of memory to hold the list data
+			mListDataHdl = %mem_proc(DM_ALLOC+DM_STATIC, mListDataLen = ^size(dataArea))
+
+			;;we will parse out the fields from the window and use these
+			;;to determine the fields in the DataTable, which is bound to the
+			;;DataGrid
+
+			fldNum = 0
+			repeat
+			begin
+				;;get the next field in the set?
+				incr fldNum
+
+				i_fldinf(winID, fldName="", fldNum, , gs_inpfld)
+				if (fldName == "  ") exitloop	;;got them all!
+
+				columnData = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Data.ListFieldData')
+
+				columnData.SetProperty("FieldName", %atrim(fldName))
+
+				;;we are stting the default column heading to the field name.  This can be overwritten
+				;;by calling the Sect method
+				columnData.SetProperty("ColumnHeading", %atrim(fldName))
+
+				;;define the field characteristics
+				using gs_typ select
+				(D_ALPHA),
+				begin
+					columnData.SetProperty("DataType", "A")
+				end
+				(D_DECIMAL),
+				begin
+					if (gs_impdec) then
+						columnData.SetProperty("DataType", "ID")
+					else
+					begin
+						using gs_class select
+						(D_DATE_Y4MD),	columnData.SetProperty("DataType", "DATE8")
+						(),	columnData.SetProperty("DataType", "D")
+						endusing
+					end
+				end
+				(D_FIXED),
+				begin
+					columnData.SetProperty("DataType", "ID")
+				end
+				(D_INTEGER),
+				begin
+					using (gs_siz) select
+					(1),	columnData.SetProperty("DataType", "I1")
+					(2),	columnData.SetProperty("DataType", "I2")
+					(4),	columnData.SetProperty("DataType", "I4")
+					(8),	columnData.SetProperty("DataType", "I8")
+					endusing
+				end
+				endusing
+				columnData.SetProperty("DataStart", gs_pos)
+				columnData.SetProperty("DataSize", gs_siz)
+
+				;;add the column to the list view model
+				mViewModel.call("AddColumnItem", columnData)
+
+			end
+
+			;;create a toolkit window and host the control
+			mWindowID = %dotnet_tkwin('SYNLSTCNTL', 10, 70, mList, DN_WPF)
+
+			;;sort out the window
+			Symphony.Concerto.SetEventDispatcher.SetWindow(mWindowID, mList)
+
+            mreturn methodResult
+
+        endmethod
+
+		public method Sect	,void
+			in req text		,a
+			in req textLoc	,n
+			endparams
+		proc
+			using (textLoc) select
+			(D_HEADER),
+				extractHeader(text)
+			endusing
+		endmethod
+
+		public method AssignLoadMethod	,void
+			in req methodName			,a
+		proc
+
+			mLoadMethod = methodName
+		endmethod
+
+		public method Process	,void
+			endparams
+		proc
+			if (mTableMade == false)
+				makeTheTable()
+
+			if (mTableGotData == false)
+				loadTheTable()
+
+			u_window(D_PLACE, mWindowID, mRow, mCol)
+
+			;;process the graph
+			dotnet_tkinput(mWindowID)
+
+			mreturn
+
+		endmethod
+
+		public method Reset	,void
+			endparams
+		proc
+			mIndex = 0
+			mViewModel.call("ClearTable")
+
+		endmethod
+
+		private method extractHeader	,void
+			in req text					,a
+			endparams
+
+			record
+				stPos	,i4
+				edPos	,i4
+				colNum	,i4
+			endrecord
+		proc
+
+			stPos = 1
+			clear colNum
+
+			repeat
+			begin
+				edPos = %instr(stPos, text, "|")
+				if (!edPos) exitloop		;;done
+
+				;;got a header
+
+				;;add the column header
+				mViewModel.call("SetColumnHeader", text(stPos : edPos))
+
+			end
+
+			mreturn
+
+		endmethod
+
+		private method makeTheTable	,void
+			endparams
+		proc
+			;;now create the DataTable within the ViewModel and data bind!
+			mViewModel.call("CreateTable")
+			mTableMade = true
+			mreturn
+
+		endmethod
+
+		private method loadTheTable	,void
+			endparams
+		proc
+			;;now create the DataTable within the ViewModel and data bind!
+			mViewModel.call("LoadTable")
+			mTableGotData = true
+			mreturn
+
+		endmethod
+
+		private method ListLoadMethod	,void
+			sender      ,@DotNetObject
+			e           ,@DotNetObject
+			endparams
+
+			record
+				listid		,i4
+				req			,i4
+				datahdl		,i4
+				inpid		,i4
+				disable		,i1
+			endrecord
+
+			structure str
+				strData	,a1
+			endstructure
+		proc
+
+			;;we are going to call back into the assigned list load method
+
+			listid = 0
+			req = 1
+			inpid = 0
+			disable = 0
+			incr mIndex
+
+			xcall xsubr(mLoadMethod,
+			&	listid,
+			&	req,
+			&	^m(strData(1:mListDataLen), mListDataHdl),
+			&	inpid,
+			&	disable,
+			&	mIndex)
+
+			if (req != 4) then
+			begin
+				e.SetProperty('DataArea', ^m(strData(1:mListDataLen), mListDataHdl))
+				e.SetProperty('MoreItems', 1)
+			end
+			else
+			begin
+				e.SetProperty('MoreItems', 0)
+			end
+
+		endmethod
+
+    endclass
+endnamespace

@@ -1,0 +1,92 @@
+;;**********************************************************************
+;;
+;; Title:       DrillDate.dbl
+;;
+;; Type:        Subroutine
+;;
+;; Description: drill method handler to display a calendar control
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+import Symphony.Concerto
+
+subroutine DrillDate
+	.include "WND:inpinf.def"	;;Input information
+	a_inprec        ,a			;;Input record
+	endparams
+
+.include "DBLDIR:windows.def"
+.include "WND:tools.def"
+.include "WND:fldinf.def"
+
+.align
+record
+	row     	,i4
+	col     	,i4
+	date    	,d8
+	fld_name	,a30
+
+proc
+
+	e_enter()
+
+	;;Get the field name
+	fld_name = %i_getstring(inp_wndid, inp_fldnam)
+
+	;;Get any current value
+	i_getfld(inp_wndid,, a_inprec, fld_name, date)
+	;;Get field information
+	i_fldinf(inp_wndid, fld_name,,, gs_inpfld)
+
+	;;Compute row as the field's row
+	;;Plus the window's placement row
+	;;Minus any display area origin, plus 1
+	row = gs_frow +
+	&       %w_info(WIF_ACTPROW, inp_wndid) -
+	&       %w_info(WIF_DROW, inp_wndid) + 1
+
+	col = gs_fcol +
+	&       %w_info(WIF_ACTPCOL, inp_wndid) -
+	&       %w_info(WIF_DCOL, inp_wndid)
+
+	;;display and process the calendar control
+	date = Symphony.Concerto.CalendarControl.Process(row, col, date, 9, 24)
+
+	;;If we selected a date
+	;;put it back into the field
+	if (date)
+	begin
+		xcall i_putfld(inp_wndid,, a_inprec, fld_name, date)
+	end
+
+	e_exit()
+
+	xreturn
+
+endsubroutine

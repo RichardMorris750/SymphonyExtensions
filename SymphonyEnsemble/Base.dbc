@@ -1,0 +1,23 @@
+
+import System
+import System.Collections.Generic
+import System.Text
+
+
+namespace Symphony.Ensemble
+
+	public static class Base
+		
+		const cVersion	,int	,2
+
+		public static property AssemblyVersion, int
+			method get
+			proc
+				mreturn cVersion
+			endmethod
+		endproperty
+		
+	endclass
+
+endnamespace
+

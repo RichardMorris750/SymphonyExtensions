@@ -1,0 +1,10 @@
+namespace Symphony.Concerto
+
+	public class windowDetails
+
+		public id	,i4
+		public obj	,@DotNetObject
+
+	endclass
+
+endnamespace

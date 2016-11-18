@@ -1,0 +1,84 @@
+;;**********************************************************************
+;;
+;; Title:       DotNetProgress.dbl
+;;
+;; Type:        Subroutine
+;;
+;; Description: wrapper routine to display a progress bar
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+function DotNetProgress	,^val
+	in req opt			,n	;option
+							; -1 = delete
+							; 0  = create
+							; 1 = update
+	in opt min			,n	;start value for the progress bar during create
+							;and update value during update function
+	in opt max			,n	;finish value for the progress bar count
+	in opt row			,n	;row to position indicator
+	in opt col			,n	;col to position indicator
+	in opt label		,a	;optional description label
+	in opt font			,n	;optional specify text font size
+    endparams
+
+static record
+	pBar			,@Symphony.Concerto.ProgressBar
+	status			,i4		;return status
+endrecord
+
+proc
+	using opt select
+(-1)		, 	call progress_delete
+(0)			,	call progress_create
+()			,	call progress_update
+	endusing
+
+	freturn status
+
+progress_create,
+
+	pBar = new Symphony.Concerto.ProgressBar()
+	pBar.Create(row, col, 45, label, max, font)
+	return
+
+progress_update,
+
+	if (%passed(min)) then
+		pBar.IncrementTo(min)
+	else
+		pBar.Increment()
+
+	return
+
+progress_delete,
+
+	pBar.Finish()
+
+	return
+endfunction

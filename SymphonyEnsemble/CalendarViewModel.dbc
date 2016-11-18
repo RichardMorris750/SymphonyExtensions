@@ -1,0 +1,14 @@
+
+import System
+import System.Collections.Generic
+import System.Text
+
+
+namespace SymphonyEnsemble
+
+	public class CalendarViewModel
+		
+	endclass
+
+endnamespace
+

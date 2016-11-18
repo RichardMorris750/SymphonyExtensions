@@ -1,0 +1,227 @@
+;;**********************************************************************
+;;
+;; Title:       ProgressBar.dbc
+;;
+;; Type:        Class
+;;
+;; Description: WPF progress bar control for UI toolkit programs
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+Namespace Symphony.Concerto
+
+	;;; <summary>
+	;;; Static class to allow te display of a Progress Bar within a Synergy UI
+	;;; Toolkit program.
+	;;; </summary>
+	;;; <returns></returns>
+	public class ProgressBar
+
+		;;define the minimum assembly version that this control will work with
+		private const cMinVersion     			,i1     ,1
+
+		;;private instance variables
+		private mInitialised       		,boolean        ,false
+		private mProgress         		,@DotNetObject
+		private mViewModel				,@DotNetObject
+		private mProgressData			,@DotNetObject
+		private mMaximumValue      		,i4
+		private mWindowID          		,i4
+
+		;;; <summary>
+		;;; Create a Synergy UI Toolkit window and host a form
+		;;; that display a label and a progress bar.  The label
+		;;; and progress bar are sized to match the midth of the window
+		;;; </summary>
+		;;; <param name="posX">pass the row value</param>
+		;;; <param name="posY">pass the column value</param>
+		;;; <param name="width">define the width of the window</param>
+		;;; <param name="description">text to display in the label</param>
+		;;; <param name="maxValue">maximum value the progress bar will display</param>
+		;;; <returns></returns>
+		public method Create 	    ,void
+			in req posX             ,n
+			in req posY             ,n
+			in req width            ,n
+			in req description      ,a
+			in req maxValue         ,n
+			in opt fontSize			,n
+			endparams
+
+.include 'DBLDIR:windows.def'
+.include 'WND:tools.def'
+
+			record
+				group rect
+					left    	,i4
+					top     	,i4
+					right   	,i4
+					bottom  	,i4
+				endgroup
+				showProgressBar ,a1
+				logLength       ,d2
+			endrecord
+		proc
+			;;load the control
+			mProgress = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Controls.Progress')
+
+			;;create a toolkit window and host the control
+			if (%passed(fontSize) && fontSize > 20) then
+				mWindowID = %dotnet_tkwin('', 3, width, mProgress, DN_WPF)
+			else
+				mWindowID = %dotnet_tkwin('', 2, width, mProgress, DN_WPF)
+
+			w_brdr(mWindowID, WB_ON, WB_DRAGOFF)
+
+			;;get the window size and font details
+			u_winmetrics(D_CLIENT_RECT, %w_info(WIF_HWND, mWindowID), rect)
+
+			u_gblwnd(mWindowID)
+
+			;;now size the WPF control
+			mProgress.SetProperty('Width', rect.right)
+			mProgress.SetProperty('Height', rect.bottom)
+
+			;;display the window
+			w_proc(WP_PLACE, mWindowID, posX, posY)
+
+			;;create the view model
+			mViewModel = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.ViewModel.ProgressViewModel', mProgress)
+
+			;;display the window
+			u_window(D_PLACE, mWindowID, posX, posY)
+
+			;;let's bind the view model to the data context of the view
+			mProgress.SetProperty('DataContext', mViewModel)
+
+			;;set values
+			mProgressData = (DotNetObject)mViewModel.GetProperty("ProgressData")
+			mProgressData.SetProperty("Description", description)
+			mMaximumValue = maxValue
+			mProgressData.SetProperty("MaxValue", mMaximumValue)
+			if (%passed(fontSize))
+			begin
+				mProgressData.SetProperty("FontSize", fontSize)
+			end
+
+			w_updt()
+			mInitialised = true
+
+			mreturn
+
+		endmethod
+
+		;;; <summary>
+		;;; Allows the changing/assigning of the description
+		;;; </summary>
+		;;; <returns></returns>
+		public property Description ,a
+			method set
+			proc
+				if (mInitialised)
+				begin
+					mProgressData.SetProperty("Description", value)
+					w_updt()
+				end
+				mreturn
+			endmethod
+		endproperty
+
+		;;; <summary>
+		;;; increment the progess value
+		;;; </summary>
+		;;; <returns></returns>
+		public method Increment  ,void
+			endparams
+
+		proc
+			if (mInitialised)
+			begin
+				mViewModel.Call("Increment")
+				w_updt()
+			end
+			mreturn
+		endmethod
+
+		;;; <summary>
+		;;; increment the progess value to the passed value
+		;;; </summary>
+		;;; <returns></returns>
+		public method IncrementTo  ,void
+			in req valueToSet			,i4
+			endparams
+
+		proc
+			if (mInitialised)
+			begin
+				mProgressData.SetProperty("CurrentValue", valueToSet)
+			end
+			mreturn
+		endmethod
+
+		;;; <summary>
+		;;; Ensure the progress bar is maxed out.
+		;;; </summary>
+		;;; <returns></returns>
+		public method Max        ,void
+			endparams
+
+		proc
+			if (mInitialised)
+			begin
+				mViewModel.Call("MaxItOut")
+			end
+			mreturn
+		endmethod
+
+		;;; <summary>
+		;;; Remove the progress bar from the screen
+		;;; </summary>
+		;;; <returns></returns>
+		public method Finish  ,void
+			endparams
+
+		proc
+
+			Max()
+			if (mInitialised)
+			begin
+				u_window(D_REMOVE, mWindowID)
+				u_window(D_DELETE, mWindowID)
+				w_updt()
+				mViewModel = ^null
+				mProgressData = ^null
+				mProgress = ^null
+			end
+
+			mreturn
+		endmethod
+
+	endclass
+endnamespace

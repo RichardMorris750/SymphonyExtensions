@@ -1,0 +1,165 @@
+;;**********************************************************************
+;;
+;; Title:       GraphViewModel.dbc
+;;
+;; Type:        Class
+;;
+;; Description: graph control view model class
+;;
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+import System
+import System.Collections.Generic
+import System.Text
+import System.Collections
+import System.ComponentModel
+
+import Symphony.Conductor.Commands
+import Symphony.Ensemble.Data
+
+namespace Symphony.Ensemble.ViewModel
+
+	public class GraphViewModel extends BaseViewModel
+		
+.region "Constructor"
+		public method GraphViewModel
+			endparams
+		proc
+			mGraphData = new ArrayList();
+		endmethod
+
+.endregion
+
+.region "Methods"
+
+		public method AddGraphItem	,void
+			in req barLabel			,String
+			in req barValue			,int
+			endparams
+		proc
+			data gbd	,@GraphBindingData	,new GraphBindingData(barLabel, barValue)
+			mGraphData.Add(gbd)
+			raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("GraphData"))
+			
+		endmethod
+.endregion
+
+
+.region "Properties"
+
+		private mGraphData	,@ArrayList
+
+		;;; <summary>
+		;;;  Expose the collectin of graph items
+		;;; </summary>
+		public property GraphData, @ArrayList
+			method get
+			proc
+				mreturn mGraphData
+			endmethod
+			method set
+			proc
+				mGraphData = value
+				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("GraphData"))
+			endmethod
+		endproperty
+
+		private mGraphTitle	,string
+		;;; <summary>
+		;;;  Graph title
+		;;; </summary>
+		public property GraphTitle, String
+			method get
+			proc
+				mreturn mGraphTitle
+			endmethod
+			method set
+			proc
+				mGraphTitle = value
+			endmethod
+		endproperty
+
+		private mGraphSummary	,string
+		;;; <summary>
+		;;;  Graph summary text
+		;;; </summary>
+		public property GraphSummary, String
+			method get
+			proc
+				mreturn mGraphSummary
+			endmethod
+			method set
+			proc
+				mGraphSummary = value
+			endmethod
+		endproperty
+		
+.endregion
+
+.region "Commands"
+		
+		private mCommandBinding	,@GenericCommand
+		
+		;;; <summary>
+		;;;  Bindable command to allow for the signalling of a menu entry to the host UI Toolkit program
+		;;; </summary>
+		public property CommandBinding, @GenericCommand
+			method get
+			proc
+				if (mCommandBinding == ^null)
+				begin
+					mCommandBinding = new GenericCommand("GRAPH")
+					addhandler(mCommandBinding.CommandExecuted, commandExecuted_event)
+				end
+				mreturn mCommandBinding
+			endmethod
+		endproperty
+		
+		private method commandExecuted_event	,void
+			sender								,@Object
+			param								,String
+			endparams
+		proc
+			RaiseMenuSignal(param)
+		endmethod
+		
+.endregion
+		
+
+.region "Events"
+		
+		public event PropertyChanged	,@PropertyChangedEventHandler
+		
+.endregion
+
+
+	endclass
+
+endnamespace
+

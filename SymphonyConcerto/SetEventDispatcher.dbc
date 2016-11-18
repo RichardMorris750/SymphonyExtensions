@@ -1,0 +1,97 @@
+import Synergex.SynergyDE.Collections
+;;**********************************************************************
+;;
+;; Title:       SetEventDispatcher.dbc
+;;
+;; Type:        Class
+;;
+;; Description: record a window event dispatcher to a window
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+Namespace Symphony.Concerto
+
+	public class SetEventDispatcher
+
+		public static WindowList	,@ArrayList
+
+		private static mEventHdl	,i4
+
+		public static method SetWindow	,void
+			in req windowID				,i4
+			in req control				,@DotNetObject
+			endparams
+
+			.include 'DBLDIR:windows.def'
+			.define D_DEFINES_ONLY
+			.include 'WND:tools.def'
+
+			record
+				group rect
+					left    ,i4
+					top     ,i4
+					right   ,i4
+					bottom  ,i4
+				endgroup
+				win	,@WindowDetails
+			endrecord
+		proc
+
+			win = new WindowDetails()
+			win.id = windowID
+			win.obj = control
+
+			if (Symphony.Concerto.SetEventDispatcher.mEventHdl == 0)
+			begin
+				Symphony.Concerto.SetEventDispatcher.mEventHdl = %u_wndevents(D_CREATE, , D_EVENT_SIZE, "WindowEventDispatcher")
+				WindowList = new ArrayList()
+			end
+
+			u_wndevents(D_ASSIGN, Symphony.Concerto.SetEventDispatcher.mEventHdl, windowID)
+			w_brdr(windowID, WB_ON, WB_DRAGON)
+			w_brdr(windowID, WB_SBOFF)
+
+			;;get the window size and font details
+			u_winmetrics(D_CLIENT_RECT, %w_info(WIF_HWND, windowID), rect)
+
+			u_gblwnd(windowID)
+
+			;;now size the WPF control
+			win.obj.SetProperty('Width', rect.right)
+			win.obj.SetProperty('Height', rect.bottom)
+
+			;;store the window details
+
+			WindowList.Add(win)
+
+		endmethod
+
+	endclass
+
+endnamespace
+

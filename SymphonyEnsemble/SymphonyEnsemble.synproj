@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Name>"SymphonyEnsemble"</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1a32c019-7abd-40eb-bf74-2b6d96413912}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Symphony.Ensemble</RootNamespace>
+    <AssemblyName>SymphonyEnsemble</AssemblyName>
+    <MainFile>Class.dbl</MainFile>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetPlatform>v4</TargetPlatform>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <DBL_qWarnLevel>3 - Don't display warnings levels higher than 3</DBL_qWarnLevel>
+    <DBL_qWarn>True</DBL_qWarn>
+    <DBLCmdOptions> -W3 -qstack</DBLCmdOptions>
+    <Language>Synergy</Language>
+    <DBL_unQulRecStm>Stack</DBL_unQulRecStm>
+    <StartupObject>(Not set)</StartupObject>
+    <ApplicationIcon />
+    <ResourceType>Icon</ResourceType>
+    <ResourceName />
+    <NoWin32Manifest />
+    <SignManifests>false</SignManifests>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>$(SOLUTIONDIR)SymphonyEnsemble\SymphonyFramework.snk</AssemblyOriginatorKeyFile>
+    <SccProjectName>SymphonyEnsemble</SccProjectName>
+    <SccProvider>SourceGear Vault Visual Studio 2005 Client:{7BE9CE03-56BF-4682-9C06-78C68B134B30}</SccProvider>
+    <SccAuxPath>http://morrisrlaptop/VaultService</SccAuxPath>
+    <SccLocalPath>3~16997059-4138-4d7d-847b-683bda0809de</SccLocalPath>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <IncludeDebugInformation>true</IncludeDebugInformation>
+    <OutputPath>bin\Debug\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <DebugOptimize>Debug</DebugOptimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <IncludeDebugInformation>true</IncludeDebugInformation>
+    <OutputPath>bin\Release\</OutputPath>
+    <PlatformTarget>x86</PlatformTarget>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\packages\Blend.Interctivity.WPF.v4.0.1.0.3\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="SymphonyAdapter, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyAdapter.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyConductor, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyConductor.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyConductorWPF, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyConductorWPF.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyCore, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyCore.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyCrescendo, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyCrescendo.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyHarmony, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyHarmony.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="SymphonyUIToolkit, Version=3.2.0.0, Culture=neutral, PublicKeyToken=14780e48e42cd7e3">
+      <HintPath>..\packages\SymphonyFramework.3.2.11\lib\net45\SymphonyUIToolkit.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="synrnt">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\packages\Blend.Interctivity.WPF.v4.0.1.0.3\lib\net40\System.Windows.Interactivity.dll</HintPath>
+      <Private>True</Private>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Base.dbc" />
+    <Compile Include="Controls\Calendar.xaml.dbl">
+      <DependentUpon>Controls\Calendar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Components\ListFind.xaml.dbl">
+      <DependentUpon>Controls\Components\ListFind.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Components\ListGrid.xaml.dbl">
+      <DependentUpon>Controls\Components\ListGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ListControl.xaml.dbl">
+      <DependentUpon>Controls\ListControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Progress.xaml.dbl">
+      <DependentUpon>Controls\Progress.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\WebViewer.xaml.dbl">
+      <DependentUpon>Controls\WebViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Data\CalendarBindingData.dbc" />
+    <Compile Include="Data\FindColumnList.dbc" />
+    <Compile Include="Data\GraphBindingData.dbc" />
+    <Compile Include="Data\ListColumnDataType.dbc" />
+    <Compile Include="Data\ListFieldData.dbc" />
+    <Compile Include="Data\ProgressBindingData.dbc" />
+    <Compile Include="Data\WebViewerBindingData.dbc" />
+    <Compile Include="Delegates\DelegateDeclarations.dbc" />
+    <Compile Include="Properties\AssemblyInfo.dbl" />
+    <Compile Include="ViewModel\BaseViewModel.dbc" />
+    <Compile Include="ViewModel\CalendarViewModel.dbc" />
+    <Compile Include="ViewModel\GraphViewModel.dbc" />
+    <Compile Include="ViewModel\ListViewModel.dbc" />
+    <Compile Include="ViewModel\ProgressViewModel.dbc" />
+    <Compile Include="ViewModel\WebViewerViewModel.dbc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands" />
+    <Folder Include="Controls" />
+    <Folder Include="Controls\Components" />
+    <Folder Include="Data" />
+    <Folder Include="Delegates" />
+    <Folder Include="ViewModel" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls\Calendar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Components\ListFind.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Components\ListGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ListControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Progress.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\WebViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Synergex\VS2010\Synergex.SynergyDE.targets" />
+</Project>

@@ -1,0 +1,207 @@
+;;**********************************************************************
+;;
+;; Title:       CalendarControl.dbc
+;;
+;; Type:        Class
+;;
+;; Description: WPF Calendar control for UI toolkit programs
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+Namespace Symphony.Concerto
+
+
+    ;;; <summary>
+    ;;; Static class to allow the display and processing of a calendar control
+    ;;; within a Synergy UI Toolkit program.
+    ;;; </summary>
+    ;;; <returns></returns>
+    public class CalendarControl
+
+        ;;define the minimum assembly version that this control will work with
+        private const cMinVersion     ,i1     ,1
+
+        ;;private variables
+        private static mInitialised             ,boolean        ,false
+
+        private static mViewModel	          	,@DotNetObject
+        private static mCalendar	          	,@DotNetObject
+        private static mDelegate                ,@DotNetDelegate
+        private static mWindowID                ,i4
+
+        ;;; <summary>
+        ;;; Create a Synergy UI Toolkit window and host the
+        ;;; UI Calendar control
+        ;;; </summary>
+        ;;; <param name="posX">pass the row value</param>
+        ;;; <param name="posY">pass the column value</param>
+        ;;; <param name="defaultDate">default date</param>
+        ;;; <returns></returns>
+        public static method Process    ,d8
+            in req posX                 ,n
+            in req posY                 ,n
+            in req defaultDate          ,d
+            endparams
+
+        proc
+            mreturn Symphony.Concerto.CalendarControl.processTheCalendar(posX, posY, defaultDate, 8, 23)
+
+        endmethod
+
+		;;; <summary>
+		;;; Create a Synergy UI Toolkit window and host the
+		;;; UI Calendar control
+		;;; </summary>
+		;;; <param name="posX">pass the row value</param>
+		;;; <param name="posY">pass the column value</param>
+		;;; <param name="defaultDate">default date</param>
+		;;; <returns></returns>
+		public static method Process    ,d8
+			in req posX                 ,n
+			in req posY                 ,n
+			in req defaultDate          ,d
+			in req height				,n
+			in req width				,n
+			endparams
+
+		proc
+			mreturn Symphony.Concerto.CalendarControl.processTheCalendar(posX, posY, defaultDate, height, width)
+
+		endmethod
+
+        ;;private event handler to signal menu choice
+        public static method DateSelected  ,void
+            sender      ,@DotNetObject
+            e           ,@DotNetObject
+            endparams
+        proc
+            m_signal((string)e.GetProperty('MenuName'))
+        endmethod
+
+		private static method processTheCalendar    ,d8
+			in req posX                 ,n
+			in req posY                 ,n
+			in req defaultDate          ,d
+			in req height				,n
+			in req width				,n
+			endparams
+
+		.include 'DBLDIR:windows.def'
+		.include 'WND:tools.def'
+
+		record
+			;;window coordinates
+			group rect
+				left    ,i4
+				top     ,i4
+				right   ,i4
+				bottom  ,i4
+			endgroup
+			;;font information
+			faceName        ,a50
+			pointSize       ,d28.10
+			showCalendar    ,a1
+			logLength       ,d2
+			strValue        ,string
+			decValue		,d8
+		endrecord
+
+		proc
+			decValue = defaultDate
+
+			;;only create the control/window once
+			if (!mInitialised)
+			begin
+				;;create an instance of the calendar view model
+				mViewModel = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.ViewModel.CalendarViewModel')
+
+				;;load the Calendar.Control control
+				mCalendar = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Controls.Calendar')
+
+				;;let's bind the view model to the data context of the view
+				mCalendar.SetProperty('DataContext', mViewModel)
+
+				;; Let's know when they select a date or cancel the calendar
+				mDelegate = new DotNetDelegate(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Delegates.MenuSignalEventHandler', ^null, 'Symphony.Concerto.CalendarControl.DateSelected')
+
+				mViewModel.AddDelegateToEvent('MenuSignal', mDelegate)
+
+				;;create a toolkit window and host the control
+				mWindowID = %dotnet_tkwin('SYNCALCNTL', height, width, mCalendar, DN_WPF)
+				w_brdr(mWindowID, WB_ON, WB_DRAGOFF)
+
+				;;get the window size and font details
+				u_winmetrics(D_CLIENT_RECT, %w_info(WIF_HWND, mWindowID), rect)
+				u_wndfont(D_GETFONT, DF_CURRENT, faceName, pointSize)
+
+				u_gblwnd(mWindowID)
+
+				;;now size the WPF control
+				mCalendar.SetProperty('Width', rect.right)
+				mCalendar.SetProperty('Height', rect.bottom)
+
+				mInitialised = true
+
+			end
+
+			if (mInitialised)
+			begin
+				data calendarData,@DotNetObject
+
+				;;display the window
+				u_window(D_PLACE, mWindowID, posX, posY)
+
+				;;set the default
+				calendarData = (DotNetObject)mViewModel.GetProperty("CalendarData")
+				calendarData.SetProperty("SynergyDate", defaultDate)
+
+				;;process the calendar
+				dotnet_tkinput(mWindowID)
+
+				;;delete the calendar window and associated control
+				u_window(D_DELETE, mWindowID)
+				mCalendar = ^null
+				mInitialised = false
+
+				;;they selected a date
+				if (g_entnam == 'SELECT')
+				begin
+					calendarData.GetProperty("SynergyDate", strValue)
+					decValue = strValue
+				end
+
+				;;ensure we don't bubble up the menu option!
+				clear g_entnam
+			end
+			mreturn decValue
+
+		endmethod
+
+
+    endclass
+endnamespace

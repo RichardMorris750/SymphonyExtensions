@@ -1,0 +1,637 @@
+;; **********************************************************************
+;; 
+;;  Title:       ListViewModel.dbc
+;; 
+;;  Type:        Class
+;; 
+;;  Description: View model for the List control
+;; 
+;;  Author:      Richard C. Morris, Synergex Professional Services Group
+;; 
+;;  Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;; 
+;;  Redistribution and use in source and binary forms, with or without
+;;  modification, are permitted provided that the following conditions are met:
+;; 
+;;  * Redistributions of source code must retain the above copyright notice,
+;;    this list of conditions and the following disclaimer.
+;; 
+;;  * Redistributions in binary form must reproduce the above copyright notice,
+;;    this list of conditions and the following disclaimer in the documentation
+;;    and/or other materials provided with the distribution.
+;; 
+;;  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;;  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;;  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;;  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;;  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;;  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;;  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;;  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;;  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;;  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;;  POSSIBILITY OF SUCH DAMAGE.
+;; 
+;; **********************************************************************
+import System
+import System.Collections.Generic
+import System.Linq
+import System.Text
+import System.Collections
+import System.ComponentModel
+import System.Data
+
+import Symphony.Core
+import Symphony.Conductor.Content
+import Symphony.Conductor.Commands
+import Symphony.Conductor.ViewModel
+
+import Symphony.Ensemble.Data
+import Symphony.Ensemble.Delegates
+
+namespace Symphony.Ensemble.ViewModel
+	
+	public class ListViewModel extends Symphony.Conductor.ViewModel.BaseViewModel
+		
+		private enum findDirection
+			forward
+			backward
+		endenum
+		
+		public method ListViewModel
+			view					,@System.Windows.FrameworkElement 
+			endparams
+			parent(view)
+		proc
+			DebugView.Write("ListViewModel : Creating new list")
+			mListDataTable = new DataTable()
+			mColumnData = new ArrayList()
+
+			;; build the field list selection object bound to the comob box
+			mFindColumnListCollection = new FindColumnList()
+		endmethod
+		
+.region "Commands"
+
+		private mbuttonCommand, @Symphony.Conductor.Commands.GenericCommand
+		;;; <summary>
+		;;;  Bindable point to expose generic command option
+		;;; </summary>
+		public property ButtonCommand, @GenericCommand
+			method get
+			proc
+				if (mbuttonCommand == ^null)
+				begin
+					mbuttonCommand = new GenericCommand("GENERIC")
+					addhandler(mbuttonCommand.CommandExecuted, buttonCommand_execute)
+				end
+				mreturn mbuttonCommand
+			endmethod
+		endproperty
+		
+		private method buttonCommand_execute	,void
+			sender								,@object 
+			parameter							,String 
+			endparams
+		proc
+			DebugView.Write("buttonCommand_execute : process command " + parameter)
+
+			using parameter select
+			("SEARCH"),
+			begin
+				DebugView.Write("buttonCommand_execute : moving to the find state")
+				this.MoveToState("FindState")
+			end
+			("CLOSE"),
+			begin
+				DebugView.Write("buttonCommand_execute : close to the find state")
+				this.StateAborted()
+			end
+			("PREV"),
+			begin
+				DebugView.Write("buttonCommand_execute : about to find formward")
+				findNextRow(findDirection.backward)
+			end
+			("NEXT"),
+			begin
+				DebugView.Write("buttonCommand_execute : about to move backwards")
+				findNextRow(findDirection.forward)
+			end
+			endusing
+		endmethod
+		
+.endregion
+
+.region "Properties"
+
+		private mColumnData, @ArrayList
+		
+		;;; <summary>
+		;;;  Expose the colukmn data
+		;;; </summary>
+		public property ColumnData, @ArrayList
+			method get
+			proc
+				mreturn mColumnData
+			endmethod
+			method set
+			proc
+				mColumnData = value
+			endmethod
+		endproperty
+		
+		private mFindColumnListCollection, @FindColumnList
+		
+		;;; <summary>
+		;;;  Collecton of columns that allow searching
+		;;; </summary>
+		public property FindColumnListCollection, @FindColumnList
+			method get
+			proc
+				mreturn mFindColumnListCollection
+			endmethod
+			method set
+			proc
+				mFindColumnListCollection = value
+			endmethod
+		endproperty
+		
+		private mSelectedFindColumn, int
+
+		;;; <summary>
+		;;;  Search column item index
+		;;; </summary>		
+		public property SelectedFindColumn, int
+			method get
+			proc
+				mreturn mSelectedFindColumn
+			endmethod
+			method set
+			proc
+				mSelectedFindColumn = value
+			endmethod
+		endproperty
+		
+		private mSearchText, string
+
+		;;; <summary>
+		;;;  Search text
+		;;; </summary>		
+		public property SearchText, string
+			method get
+			proc
+				mreturn mSearchText
+			endmethod
+			method set
+			proc
+				mSearchText = value
+			endmethod
+		endproperty
+
+		private mListDataTable, @DataTable
+		
+		;;; <summary>
+		;;;  List table data
+		;;; </summary>
+		public property ListDataTable, @DataTable
+			method get
+			proc
+				DebugView.Write("ListViewModel : ListDataTable to return the data")
+				mreturn mListDataTable
+			endmethod
+			method set
+			proc
+				mListDataTable = value
+			endmethod
+		endproperty
+		
+		private mListItemSelected, int
+		
+		;;; <summary>
+		;;;  selected item index
+		;;; </summary>
+		public property ListItemSelected, int
+			method get
+			proc
+				DebugView.Write(string.Concat("ListViewModel : (get) Selected item : ", mListItemSelected.ToString()))
+				mreturn mListItemSelected
+			endmethod
+			method set
+			proc
+				mListItemSelected = value
+				DebugView.Write(string.Concat("ListViewModel : (set) Selected item : ", mListItemSelected.ToString()))
+			endmethod
+		endproperty
+		
+		private mListDataView, @DataView
+		
+		;;; <summary>
+		;;;  list view data view
+		;;; </summary>
+		public property ListDataView, @DataView
+			method get
+			proc
+				mreturn mListDataView
+			endmethod
+			method set
+			proc
+				mListDataView = value
+			endmethod
+		endproperty
+
+.endregion
+				
+.region "Methods"
+		
+		;;; <summary>
+		;;;  Add a column to the data table/row layout
+		;;; </summary>
+		public method AddColumnItem, void
+			columnData, @ListFieldData 
+			endparams
+		proc
+			DebugView.Write("ListViewModel : Adding column data....")
+			DebugView.Write(string.Concat("ListViewModel : FieldName = ", columnData.FieldName))
+			DebugView.Write(string.Concat("ListViewModel : DataType = ", columnData.DataType))
+			DebugView.Write(string.Concat("ListViewModel : DataStart = ", columnData.DataStart))
+			DebugView.Write(string.Concat("ListViewModel : DataSize = ", columnData.DataSize))
+			mColumnData.Add(columnData)
+			DebugView.Write("ListViewModel : Success!!")
+			;; add the column to the find selection list
+			mFindColumnListCollection.Add(new Conductor.Content.SelectionItem(columnData.FieldName))
+		endmethod
+		
+		;;;  <summary>
+		;;;  Creates the data table based on the fields types defined n the column array
+		;;;  </summary>
+		public method CreateTable, void
+			endparams
+		proc
+			DebugView.Write("ListViewModel : Initialize table....")
+			mListDataTable.Clear()
+			data dc, @DataColumn
+			dc = ^null
+			begin
+				data colData, @ListFieldData
+				foreach colData in mColumnData
+				begin
+					DebugView.Write(string.Concat("ListViewModel : fieldName = ", colData.FieldName))
+					using colData.ColumnType select
+					(ListColumnDataType.Alpha),
+					begin
+						DebugView.Write("ListViewModel : Setting type = String")
+						dc = new DataColumn(colData.FieldName, ^typeof(String))
+						exit
+					end
+					(ListColumnDataType.Decimal),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Decimal")
+						dc = new DataColumn(colData.FieldName, ^typeof(Decimal))
+						exit
+					end
+					(ListColumnDataType.ImpliedDecimal),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Decimal")
+						dc = new DataColumn(colData.FieldName, ^typeof(Decimal))
+						exit
+					end
+					(ListColumnDataType.Date),
+					begin
+						DebugView.Write("ListViewModel : Setting type = DateTime")
+						dc = new DataColumn(colData.FieldName, ^typeof(DateTime))
+						exit
+					end
+					(ListColumnDataType.Integer1),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Int16")
+						dc = new DataColumn(colData.FieldName, ^typeof(Int16))
+						exit
+					end
+					(ListColumnDataType.Integer2),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Int16")
+						dc = new DataColumn(colData.FieldName, ^typeof(Int16))
+						exit
+					end
+					(ListColumnDataType.Integer4),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Int32")
+						dc = new DataColumn(colData.FieldName, ^typeof(Int32))
+						exit
+					end
+					(ListColumnDataType.Integer8),
+					begin
+						DebugView.Write("ListViewModel : Setting type = Int64")
+						dc = new DataColumn(colData.FieldName, ^typeof(Int64))
+						exit
+					end
+					(),
+					begin
+						exit
+					end
+					endusing
+					if ((dc != ^null))
+					begin
+						dc.Caption = colData.ColumnHeading
+						DebugView.Write(string.Concat("ListViewModel : ColumnHeading = ", colData.ColumnHeading))
+						DebugView.Write(string.Concat("ListViewModel : dc.DataType = ", dc.DataType.ToString()))
+					end
+					mListDataTable.Columns.Add(dc)
+				end
+			end
+		endmethod
+
+		;;; <summary>
+		;;;  define a column header
+		;;; </summary>		
+		public method SetColumnHeader, void
+			columnIndex, int 
+			text, string 
+			endparams
+		proc
+			DebugView.Write(string.Concat("ListViewModel : SetColumnHeader = ", columnIndex, " : ", text))
+			((@ListFieldData)mColumnData[columnIndex]).ColumnHeading = text
+			if ((mListDataTable != ^null))
+				mListDataTable.Columns[columnIndex].Caption = text
+		endmethod
+		
+		;;; <summary>
+		;;;  Force the laoding of the table
+		;;; </summary>
+		public method LoadTable, void
+			endparams
+		proc
+			;; call back to the load method
+			data listData, string
+			listData = ""
+			data listArgs, @ListLoadEventArgs
+			listArgs = new ListLoadEventArgs(listData)
+			do
+			begin
+				ListLoad(this, listArgs)
+				if ((listArgs.MoreItems == 1))
+				begin
+					DebugView.Write(String.Concat("ListViewModel : LoadTheTable, data received = ", listArgs.DataArea))
+					DebugView.Write(String.Concat("ListViewModel : LoadTheTable, more items = ", listArgs.MoreItems.ToString()))
+					moveDataToRow(listArgs.DataArea)
+				end
+			end
+			until ( (listArgs.MoreItems != 1) )
+			mListDataTable.AcceptChanges()
+			mListDataView = new DataView(mListDataTable)
+			DebugView.Write("ListViewModel : LoadTheTable - raise property changed!")
+			this.RaisePropertyChanged("ListDataTable")
+			this.RaisePropertyChanged("ListDataView")
+		endmethod
+	
+		;;; <summary>
+		;;;  Clear the table contents but keep the structure of the table intact
+		;;; </summary>	
+		public method ClearTable, void
+			endparams
+		proc
+			mListDataTable.Clear()
+		endmethod
+		
+.endregion
+
+.region "private members"
+
+		;;move the passed data to the table
+		private method moveDataToRow	,void
+			inData						,String 
+			endparams
+		proc
+			DebugView.Write("ListViewModel : moveDataToRow - start moving the data to a new row")
+			data colNum	,int
+			colNum = 0
+			data row	,@DataRow
+			row = mListDataTable.NewRow()
+			begin
+				data colData	,@ListFieldData
+				foreach colData in mColumnData
+				begin
+					data tmp	,String
+					tmp = inData.Substring((colData.DataStart - 1), colData.DataSize)
+					DebugView.Write(string.Concat("ListViewModel : moveDataToRow - data type is ", colData.ColumnType))
+					DebugView.Write(("ListViewModel : moveDataToRow - data is " + tmp))
+					using colData.ColumnType select
+					(ListColumnDataType.Alpha),
+					begin
+						row[colNum] = tmp
+						DebugView.Write(("ListViewModel : moveDataToRow - data added to column " + colNum.ToString()))
+						exit
+					end
+					(ListColumnDataType.Decimal),
+					begin
+						row[colNum] = Convert.ToDecimal(tmp)
+						DebugView.Write(("ListViewModel : moveDataToRow - data added to column " + colNum.ToString()))
+						exit
+					end
+					(ListColumnDataType.ImpliedDecimal),
+					begin
+						row[colNum] = Convert.ToDecimal(tmp)
+						row[colNum] = tmp
+						DebugView.Write(("ListViewModel : moveDataToRow - data added to column " + colNum.ToString()))
+						exit
+					end
+					(ListColumnDataType.Date),
+					begin
+						data year, int
+						year = Convert.ToInt32(tmp.Substring(0, 4))
+						data month, int
+						month = Convert.ToInt32(tmp.Substring(4, 2))
+						data day, int
+						day = Convert.ToInt32(tmp.Substring(6, 2))
+						row[colNum] = new DateTime(year, month, day)
+						DebugView.Write(string.Concat("ListViewModel : moveDataToRow - data added to column " , row[colNum].ToString()))
+						exit
+					end
+					(ListColumnDataType.Integer1),
+					begin
+						exit
+					end
+					(ListColumnDataType.Integer2),
+					begin
+						exit
+					end
+					(ListColumnDataType.Integer4),
+					begin
+						exit
+					end
+					(ListColumnDataType.Integer8),
+					begin
+						exit
+					end
+					(),
+					begin
+						exit
+					end
+					endusing
+					^incr(colNum, true)
+				end
+			end
+			mListDataTable.Rows.Add(row)
+			DebugView.Write("ListViewModel : LoadTheTable - row added to table")
+		endmethod
+		
+		;;find a matching row
+		private method findNextRow	,void
+			whichWay				,findDirection 
+			endparams
+		proc
+			data tmpWhichWay	,findDirection
+			tmpWhichWay = whichWay
+			DebugView.Write(("findNextRow : doing a search, find direction " + tmpWhichWay.ToString()))
+			DebugView.Write(("findNextRow : doing a search, find from item " + mListItemSelected.ToString()))
+			data foundOne	,boolean
+			foundOne = false
+			DebugView.Write(("findNextRow : searching from " + mListItemSelected.ToString()))
+			using tmpWhichWay select
+			(findDirection.forward),
+			begin
+				;; search from the currrent item forward
+				data ii	,int
+				ii = (mListItemSelected + 1)
+				while ((ii < (mListDataTable.Rows.Count - 1))) do
+				begin
+					foundOne = checkARow(ii)
+					if (foundOne)
+					begin
+						exitloop
+					end
+					^incr(ii, true)
+				end
+				;; if we don't find one, should we start from the begining again?
+				if (((mListItemSelected != 0) && !foundOne))
+				begin
+					DebugView.Write("findNextRow : searching from the start of the list")
+					begin
+						data ii, int
+						for ii from 0 thru mListItemSelected - 1
+						begin
+							foundOne = checkARow(ii)
+							if (foundOne)
+							begin
+								exitloop
+							end
+						end
+					end
+				end
+				exit
+			end
+			(findDirection.backward),
+			begin
+				;; search from the currrent item forward
+				begin
+					data ii, int
+					for ii from (mListItemSelected - 1) thru 0 + 1 by -1
+					begin
+						foundOne = checkARow(ii)
+						if (foundOne)
+						begin
+							exitloop
+						end
+					end
+				end
+				;; if we don't find one, should we start from the begining again?
+				if (!foundOne)
+				begin
+					DebugView.Write("findNextRow : searching from the start of the list")
+					begin
+						data ii, int
+						for ii from (mListDataTable.Rows.Count - 1) thru mListItemSelected + 1 by -1
+						begin
+							foundOne = checkARow(ii)
+							if (foundOne)
+							begin
+								exitloop
+							end
+						end
+					end
+				end
+				exit
+			end
+			endusing
+		endmethod
+		
+		;;check a row for a matching value
+		private method checkARow	,Boolean
+			rowNumber				,int 
+			endparams
+		proc
+			data foundOne	,boolean
+			foundOne = false
+			if ((mSelectedFindColumn == 0)) then
+			;; this means all
+			begin
+				DebugView.Write("checkARow : Checking all cells!")
+				data ij	,int
+				ij = 0
+				while ((ij < (mListDataTable.Columns.Count - 1))) do
+				begin
+					DebugView.Write(((("checkARow : Checking Row : " + rowNumber.ToString()) + "  cell : ") + ij.ToString()))
+					if ((checkCell(rowNumber, ij) == true))
+					begin
+						mListItemSelected = rowNumber
+						RaisePropertyChanged("ListItemSelected")
+						foundOne = true
+						exitloop
+					end
+					^incr(ij, true)
+				end
+			end
+			else
+			;; this is just one column
+			begin
+				DebugView.Write(("checkARow : just checking column : " + mSelectedFindColumn.ToString()))
+				if ((checkCell(rowNumber, (mSelectedFindColumn - 1)) == true))
+				begin
+					mListItemSelected = rowNumber
+					RaisePropertyChanged("ListItemSelected")
+					foundOne = true
+				end
+			end
+			mreturn foundOne
+		endmethod
+		
+		;;check a call for a value
+		private method checkCell	,boolean
+			rowNumber				,int 
+			cellNumber				,int 
+			endparams
+		proc
+			data foundMatch	,boolean
+			foundMatch = false
+
+			data row	,@DataRow
+			row = mListDataTable.Rows[rowNumber]
+			
+			data t	,@System.Type
+			t = row[cellNumber].GetType()
+
+			if ((t == ^typeof(String)))
+			begin
+				DebugView.Write("checkCell : compare a string cell type")
+				data tmp	,string
+				tmp = row[cellNumber].ToString()
+				DebugView.Write(((("checkCell : comparing " + tmp) + " with ") + mSearchText))
+				if ((tmp.Contains(mSearchText) == true))
+				begin
+					DebugView.Write("checkCell : string found!")
+					foundMatch = true
+				end
+			end
+			mreturn foundMatch
+		endmethod
+		
+.endregion
+
+.region "Events"
+
+		public event ListLoad	,@ListLoadEventHandler
+
+.endregion
+
+	endclass
+endnamespace

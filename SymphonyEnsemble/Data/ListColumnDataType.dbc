@@ -1,0 +1,21 @@
+
+import System
+import System.Collections.Generic
+import System.Text
+
+
+namespace Symphony.Ensemble.Data
+
+	public enum ListColumnDataType
+		Alpha,
+		Decimal,
+		ImpliedDecimal,
+		Date,
+		Integer1,
+		Integer2,
+		Integer4,
+		Integer8
+	endenum
+		
+endnamespace
+

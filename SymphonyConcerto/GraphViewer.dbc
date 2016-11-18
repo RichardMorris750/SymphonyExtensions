@@ -1,0 +1,181 @@
+;;**********************************************************************
+;;
+;; Title:       GraphViewer.dbc
+;;
+;; Type:        Class
+;;
+;; Description: WPF Graphing control for UI toolkit programs
+;;
+;; Author:      Richard C. Morris, Synergex Technology Evangelist
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+
+import System.collections
+
+Namespace Symphony.Concerto
+
+    ;;; <summary>
+    ;;; Static class to allow the display and processing of a graph control
+    ;;; within a Synergy UI Toolkit program.
+    ;;; </summary>
+    ;;; <returns></returns>
+    public class GraphViewer
+
+        ;;define the minimum assembly version that this control will work with
+        private const cMinVersion     ,i1     ,2
+
+        ;;private variables
+        private static mInitialised             ,boolean	,false
+
+        private static mGraph	         		,@DotNetObject
+		private static mViewModel				,@DotNetObject
+        private static mDelegate                ,@DotNetDelegate
+        private static mWindowID                ,i4
+
+		private static barDetailsArray			,@ArrayList
+
+		public static method AddBarDetails	,void
+			in req labelValue				,a
+			in req barValue					,n
+			endparams
+
+			record
+				barItem			,@barDetails
+			endrecord
+		proc
+			if (barDetailsArray == ^null)
+				barDetailsArray = new ArrayList()
+
+			barItem = new barDetails()
+			barItem.theLabel = labelValue
+			barItem.theValue = barValue
+
+			barDetailsArray.Add(barItem)
+
+			mreturn
+		endmethod
+
+        ;;; <summary>
+        ;;; Create a Synergy UI Toolkit window and host the
+        ;;; UI Graph control
+        ;;; </summary>
+        ;;; <param name="posX">pass the row value</param>
+        ;;; <param name="posY">pass the column value</param>
+        ;;; <param name="defaultDate">default date</param>
+        ;;; <returns></returns>
+        public static method Display    ,void
+			in req posX					,i4
+			in req posY					,i4
+			in req height				,i4
+			in req width				,i4
+			in req title				,a
+			in req summary				,a
+            endparams
+
+			.include 'DBLDIR:windows.def'
+			.include 'WND:tools.def'
+
+        	;;window coordinates
+			record
+				group rect
+					left    ,i4
+					top     ,i4
+					right   ,i4
+					bottom  ,i4
+				endgroup
+
+				record
+					barItem			,@barDetails
+				endrecord
+		proc
+			;;only create the control/window once
+			if (!mInitialised)
+			begin
+				;;create an instance of the graph view model
+				mViewModel = new DotNetObject(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.ViewModel.GraphViewModel')
+
+				;;load the graph control control from the Dev Express class library/assembly
+				mGraph = new DotNetObject(new DotNetAssembly("SYMPHONYBIN:SymphonyEnsembleDX"), 'Symphony.EnsembleDX.View.GraphControl')
+
+				;; Let's know when they close the control
+				mDelegate = new DotNetDelegate(Symphony.Concerto.Base.UIAssembly(cMinVersion), 'Symphony.Ensemble.Delegates.MenuSignalEventHandler', ^null, 'Symphony.Concerto.GraphViewer.CloseGraph')
+
+				mViewModel.AddDelegateToEvent('MenuSignal', mDelegate)
+
+				;;create a toolkit window and host the control
+				mWindowID = %dotnet_tkwin('SYNGPHCNTL', height, width, mGraph, DN_WPF)
+				w_brdr(mWindowID, WB_ON, WB_DRAGOFF)
+
+				u_gblwnd(mWindowID)
+
+				mInitialised = true
+				u_window(D_PLACE, mWindowID, posX, posY)
+
+				foreach barItem in barDetailsArray
+				begin
+					mViewModel.call("AddGraphItem", %atrim(barItem.theLabel), barItem.theValue)
+				end
+
+				mViewModel.SetProperty("GraphTitle", title)
+				mViewModel.SetProperty("GraphSummary", summary)
+
+				;;let's bind the view model to the data context of the view
+				mGraph.SetProperty('DataContext', mViewModel)
+
+				;;process the graph
+				dotnet_tkinput(mWindowID)
+
+				;;delete the calendar window and associated control
+				u_window(D_DELETE, mWindowID)
+				u_update()
+				mGraph = ^null
+				barDetailsArray = new ArrayList()
+				mInitialised = false
+
+				;;ensure we don't bubble up the menu option!
+				clear g_entnam
+			end
+
+			mreturn
+
+        endmethod
+
+		public static method CloseGraph  ,void
+			sender      ,@DotNetObject
+			e           ,@DotNetObject
+			endparams
+		proc
+			m_signal((string)e.GetProperty('MenuName'))
+		endmethod
+
+		private class barDetails
+			public theLabel	,a50
+			public theValue	,i4
+		endclass
+
+    endclass
+endnamespace

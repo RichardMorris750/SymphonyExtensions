@@ -1,0 +1,120 @@
+;; **********************************************************************
+;; 
+;; Title:       WebViewerBindingData.dbc
+;; 
+;; Type:        Class
+;; 
+;; Description: binding source for the Web Viewer control
+;; 
+;; Author:      Richard C. Morris, Synergex Professional Services Group
+;;
+;; Copyright (c) 2012, Synergex International, Inc. All rights reserved.
+;;
+;; Redistribution and use in source and binary forms, with or without
+;; modification, are permitted provided that the following conditions are met:
+;;
+;; * Redistributions of source code must retain the above copyright notice,
+;;   this list of conditions and the following disclaimer.
+;;
+;; * Redistributions in binary form must reproduce the above copyright notice,
+;;   this list of conditions and the following disclaimer in the documentation
+;;   and/or other materials provided with the distribution.
+;;
+;; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+;; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+;; IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+;; ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+;; LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+;; CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+;; SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+;; INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+;; CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+;; POSSIBILITY OF SUCH DAMAGE.
+;;
+;;*****************************************************************************
+import System
+import System.Collections.Generic
+import System.Linq
+import System.Text
+import System.ComponentModel
+import System.Windows
+import System.Windows.Controls
+
+namespace Symphony.Ensemble.Data
+	
+	public class WebViewerBindingData implements INotifyPropertyChanged
+		
+		public static readonly BindableSourceProperty, @DependencyProperty, DependencyProperty.RegisterAttached("BindableSource", ^typeof(string), ^typeof(WebViewerBindingData), new UIPropertyMetadata(^null, BindableSourcePropertyChanged))
+		
+		public static method GetBindableSource	,String
+			obj									,@DependencyObject 
+			endparams
+		proc
+			mreturn (string)obj.GetValue(BindableSourceProperty)
+		endmethod
+		
+		public static method SetBindableSource	,void
+			obj									,@DependencyObject 
+			value								,String 
+			endparams
+		proc
+			obj.SetValue(BindableSourceProperty, value)
+		endmethod
+		
+		public static method BindableSourcePropertyChanged	,void
+			obj												,@DependencyObject 
+			eArgs											,DependencyPropertyChangedEventArgs 
+			endparams
+		proc
+			data browser	,@WebBrowser
+			browser = ^as(obj, WebBrowser)
+			if ((browser != ^null))
+			begin
+				data uri, string
+				uri = ^as(eArgs.NewValue, string)
+				try
+				begin
+					browser.Source = new Uri(uri)
+				end
+				catch (e ,@Exception)
+				begin
+					nop
+				end
+				endtry
+			end
+		endmethod
+		
+		public method WebViewerBindingData
+			endparams
+		proc
+			mUri = "about:blank"
+		endmethod
+		
+		private mUri, string
+		
+		public property Uri, string
+			method get
+			proc
+				mreturn mUri
+			endmethod
+			method set
+			proc
+				mUri = value
+				if ((PropertyChanged != ^null))
+					PropertyChanged(this, new PropertyChangedEventArgs("Uri"))
+			endmethod
+		endproperty
+		
+		public method SetURIString	,void
+			inURI					,String 
+			endparams
+		proc
+			Uri = inURI
+		endmethod
+		
+		public event PropertyChanged, @PropertyChangedEventHandler
+
+	endclass
+endnamespace
+
