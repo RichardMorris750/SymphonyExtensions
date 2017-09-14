@@ -1,4 +1,3 @@
-import Synergex.SynergyDE.Collections
 ;;**********************************************************************
 ;;
 ;; Title:       SetEventDispatcher.dbc
@@ -34,6 +33,9 @@ import Synergex.SynergyDE.Collections
 ;; POSSIBILITY OF SUCH DAMAGE.
 ;;
 ;;*****************************************************************************
+
+import Synergex.SynergyDE.Collections
+
 Namespace Symphony.Concerto
 
 	public class SetEventDispatcher
