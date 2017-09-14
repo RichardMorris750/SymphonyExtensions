@@ -33,6 +33,7 @@
 ;; POSSIBILITY OF SUCH DAMAGE.
 ;;
 ;;*****************************************************************************
+;Symphony.Concerto.CalendarControl
 Namespace Symphony.Concerto
 
 
@@ -127,7 +128,7 @@ Namespace Symphony.Concerto
 			pointSize       ,d28.10
 			showCalendar    ,a1
 			logLength       ,d2
-			strValue        ,string
+			strValue        ,a8
 			decValue		,d8
 		endrecord
 
@@ -177,8 +178,9 @@ Namespace Symphony.Concerto
 				u_window(D_PLACE, mWindowID, posX, posY)
 
 				;;set the default
+				strValue = %string(decValue, 'XXXXXXXX')
 				calendarData = (DotNetObject)mViewModel.GetProperty("CalendarData")
-				calendarData.SetProperty("SynergyDate", defaultDate)
+				calendarData.SetProperty("SynergyDate", strValue)
 
 				;;process the calendar
 				dotnet_tkinput(mWindowID)

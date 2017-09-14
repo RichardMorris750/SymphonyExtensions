@@ -32,11 +32,12 @@
     <SccAuxPath>http://morrisrlaptop/VaultService</SccAuxPath>
     <SccLocalPath>3~16997059-4138-4d7d-847b-683bda0809de</SccLocalPath>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    <Prefer32Bit>False</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <IncludeDebugInformation>true</IncludeDebugInformation>
-    <OutputPath>bin\Debug\</OutputPath>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <PlatformTarget>x86</PlatformTarget>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <DebugOptimize>Debug</DebugOptimize>
   </PropertyGroup>
@@ -45,6 +46,12 @@
     <OutputPath>bin\Release\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <TargetRuntimeLevel>100301</TargetRuntimeLevel>
+    <LanguageCompatibilityLevel>100301</LanguageCompatibilityLevel>
+    <UnevaluatedOutputPath>bin\Debug\</UnevaluatedOutputPath>
+    <UseDotNetNativeToolchain />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">

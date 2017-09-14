@@ -65,6 +65,10 @@ proc
 
 	w_brdr(wID, WB_TITLE, 'Date input window')
 
+	dateField = 20011012
+	i_display(wID, , simpleDateData)
+	i_next(wID, , '*FRST*')
+	
 	;;display and process te input window
 	u_window(D_PLACE, wID, 5, 5)
 	repeat

@@ -249,3 +249,5 @@ ModelManifest.xml
 *.dbo
 /SymphonyEnsemble/DBP00000
 *.resources
+/SimpleDateControl/.intellisense/
+/SymphonyConcerto/.intellisense/

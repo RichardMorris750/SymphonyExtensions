@@ -86,6 +86,7 @@ namespace Symphony.Ensemble.ViewModel
 			method set
 			proc
 				mCalendarData = value
+;				raiseevent(PropertyChanged, this, new PropertyChangedEventArgs("CalendarData"))
 			endmethod
 		endproperty
 		

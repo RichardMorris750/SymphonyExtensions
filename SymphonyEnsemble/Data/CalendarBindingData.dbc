@@ -110,10 +110,6 @@ namespace Symphony.Ensemble.Data
 				begin
 					try
 					begin
-						
-					end
-					catch (e, @Exception)
-					begin
 						data tmpDate	,a8
 						tmpDate = value
 						SynDate = tmpDate
@@ -122,7 +118,11 @@ namespace Symphony.Ensemble.Data
 						CLRDate.mon = SynDate.mon
 						CLRDate.year = SynDate.year
 
-						ActualDate = new DateTime(CLRDate.year, CLRDate.mon, CLRDate.day)						
+						ActualDate = new DateTime(CLRDate.year, CLRDate.mon, CLRDate.day)	
+					
+					end
+					catch (e, @Exception)
+					begin
 					end
 					endtry
 				end
